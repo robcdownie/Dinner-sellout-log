@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dinner Log">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' rx='40' fill='%23046A38'/%3E%3Ctext x='90' y='120' font-size='90' text-anchor='middle'%3E%E2%8F%B1%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<title>Dinner Sellout Log — Lazy Acres #1827</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --brand:#046A38; --brand-dk:#024E29; --gold:#C6AA76; --gold-dk:#A9894F;
+    --bg:#F5F2E9; --card:#FFFEFA; --sep:rgba(4,106,56,0.13);
+    --label:#1F261D; --label2:rgba(31,38,29,0.58); --label3:rgba(31,38,29,0.34);
+    --amber:#B8860B; --amber-bg:rgba(184,108,30,0.14);
+    --red:#B23A2E; --green:#046A38; --radius:14px;
+    --safe-top:env(safe-area-inset-top,0px); --safe-bot:env(safe-area-inset-bottom,0px);
+  }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",sans-serif;
+    background:
+      radial-gradient(120% 60% at 100% 0%, rgba(4,106,56,0.09), transparent 60%),
+      radial-gradient(90% 50% at 0% 0%, rgba(198,170,118,0.12), transparent 55%),
+      var(--bg);
+    background-attachment:fixed; color:var(--label); min-height:100vh;
+    -webkit-font-smoothing:antialiased; padding-bottom:calc(120px + var(--safe-bot));
+  }
+
+  .nav {
+    position:sticky; top:0; z-index:100;
+    background:rgba(245,242,233,0.86);
+    backdrop-filter:blur(22px) saturate(150%); -webkit-backdrop-filter:blur(22px) saturate(150%);
+    border-bottom:1px solid var(--sep); padding:12px 16px 12px;
+    padding-top:calc(12px + var(--safe-top));
+  }
+  .nav-top { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .title {
+    font-family:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    font-size:25px; font-weight:800; letter-spacing:-0.5px; color:var(--brand);
+    line-height:1.04; display:flex; align-items:center; gap:7px;
+  }
+  .title .mark { flex-shrink:0; transform:translateY(-1px); }
+  .subtitle { font-size:12px; color:var(--label2); font-weight:500; margin-top:4px; }
+  .date-row { margin-top:10px; display:flex; align-items:center; gap:8px; }
+  .date-pick {
+    font-family:inherit; font-size:14px; font-weight:600; color:var(--brand-dk);
+    background:rgba(4,106,56,0.08); border:1px solid rgba(4,106,56,0.22);
+    border-radius:10px; padding:7px 11px; -webkit-appearance:none; appearance:none;
+  }
+  .nav-btn {
+    font-family:inherit; font-size:14px; font-weight:600; color:var(--brand);
+    background:none; border:none; padding:6px 4px; cursor:pointer;
+  }
+  .nav-btn.solid {
+    background:var(--brand); color:#fff; border-radius:999px; padding:8px 16px; font-weight:700;
+  }
+  .nav-btn.danger { color:var(--red); }
+
+  .hint {
+    margin:12px 16px 0; padding:10px 13px; font-size:12px; line-height:1.5;
+    color:var(--brand-dk); background:rgba(4,106,56,0.06);
+    border:1px solid rgba(4,106,56,0.16); border-radius:12px;
+  }
+  .hint b { font-weight:700; }
+
+  .content { padding:14px 16px 0; }
+  .section { margin-bottom:24px; }
+  .section-label {
+    font-family:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;
+    font-size:13px; font-weight:700; color:var(--brand); letter-spacing:0.4px;
+    text-transform:uppercase; margin:0 2px 8px; display:flex; align-items:center; gap:6px;
+  }
+  .card {
+    background:var(--card); border-radius:var(--radius); overflow:hidden;
+    border:1px solid rgba(4,106,56,0.09);
+    box-shadow:0 1px 0 rgba(255,255,255,0.6) inset, 0 2px 12px rgba(4,106,56,0.06);
+  }
+
+  .row { padding:11px 14px; border-bottom:0.5px solid var(--sep); }
+  .row:last-child { border-bottom:none; }
+  .row.priority { background:rgba(184,108,30,0.05); }
+  .row-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; }
+  .item-name { font-size:15px; font-weight:600; letter-spacing:-0.2px; }
+  .item-name .pri { font-size:8px; color:var(--amber); margin-left:5px; vertical-align:middle; }
+  .spoil-wrap { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .spoil-label { font-size:10px; color:var(--label2); text-transform:uppercase; letter-spacing:0.3px; }
+  .spoil-input {
+    width:46px; font-family:inherit; font-size:16px; font-weight:600; text-align:center;
+    border:1.5px solid var(--sep); border-radius:8px; padding:6px 2px; background:var(--bg);
+    color:var(--label); outline:none; -webkit-appearance:none; -moz-appearance:textfield;
+  }
+  .spoil-input:focus { border-color:var(--brand); background:#fff; }
+  .spoil-input.has { background:rgba(178,58,46,0.08); border-color:rgba(178,58,46,0.4); color:var(--red); }
+
+  .time-chips { display:flex; gap:6px; }
+  .chip {
+    flex:1; font-family:inherit; font-size:12.5px; font-weight:600; text-align:center;
+    padding:9px 4px; border-radius:9px; border:1.5px solid var(--sep);
+    background:var(--bg); color:var(--label2); cursor:pointer; transition:all 0.12s;
+    line-height:1.1;
+  }
+  .chip small { display:block; font-size:9px; font-weight:500; opacity:0.7; margin-top:1px; }
+  .chip.sel[data-v="early"]  { background:rgba(178,58,46,0.14);  border-color:var(--red);   color:var(--red); }
+  .chip.sel[data-v="mid"]    { background:rgba(184,108,30,0.16); border-color:var(--amber); color:var(--amber); }
+  .chip.sel[data-v="late"]   { background:rgba(198,170,118,0.22);border-color:var(--gold-dk);color:var(--gold-dk); }
+  .chip.sel[data-v="lasted"] { background:rgba(4,106,56,0.14);   border-color:var(--brand); color:var(--brand); }
+
+  .footer-bar {
+    position:fixed; left:0; right:0; bottom:0; z-index:90;
+    background:rgba(245,242,233,0.92); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border-top:1px solid var(--sep); padding:12px 16px calc(12px + var(--safe-bot));
+    display:flex; gap:10px; align-items:center;
+  }
+  .summary-stat { flex:1; font-size:12px; color:var(--label2); line-height:1.4; }
+  .summary-stat b { color:var(--brand-dk); font-weight:700; }
+  .export-btn {
+    font-family:inherit; font-size:15px; font-weight:700; color:#fff; background:var(--brand);
+    border:none; border-radius:999px; padding:13px 22px; cursor:pointer; flex-shrink:0;
+  }
+  .export-btn:active { transform:scale(0.97); }
+
+  .toast {
+    position:fixed; bottom:calc(90px + var(--safe-bot)); left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--brand-dk); color:#fff; padding:11px 18px; border-radius:12px; font-size:13px;
+    font-weight:600; opacity:0; pointer-events:none; transition:all 0.25s; z-index:200; max-width:90%;
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .modal-bg {
+    position:fixed; inset:0; background:rgba(31,38,29,0.5); z-index:300;
+    display:none; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-bg.show { display:flex; }
+  .modal {
+    background:var(--card); border-radius:18px; max-width:520px; width:100%; max-height:80vh;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .modal-head { padding:16px 18px; border-bottom:1px solid var(--sep); display:flex; justify-content:space-between; align-items:center; }
+  .modal-title { font-size:16px; font-weight:700; color:var(--brand); }
+  .modal-body { padding:16px 18px; overflow-y:auto; }
+  .modal pre {
+    font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:11.5px; line-height:1.5;
+    white-space:pre-wrap; word-break:break-word; color:var(--label);
+    background:var(--bg); padding:12px; border-radius:10px; border:1px solid var(--sep);
+  }
+  .modal-foot { padding:12px 18px calc(12px + var(--safe-bot)); display:flex; gap:10px; }
+  .modal-foot button {
+    flex:1; font-family:inherit; font-size:14px; font-weight:700; padding:12px; border-radius:10px;
+    border:none; cursor:pointer;
+  }
+  .btn-copy { background:var(--brand); color:#fff; }
+  .btn-close { background:rgba(31,38,29,0.08); color:var(--label); }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-top">
+    <div>
+      <div class="title">
+        <svg class="mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M12 21.5V8.5" stroke="#046A38" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <path d="M12 9.5c-1.6-2.4-4.6-3.1-6.4-2.9-.2 1.8.5 4.8 2.9 6.4 1.8 1.2 3.7.7 4.6.2.1-1.7-.4-3.1-1.1-3.7z" fill="#046A38"/>
+          <path d="M12 9.5c1.6-2.4 4.6-3.1 6.4-2.9.2 1.8-.5 4.8-2.9 6.4-1.8 1.2-3.7.7-4.6.2-.1-1.7.4-3.1 1.1-3.7z" fill="#5B9B6B"/>
+          <path d="M12 14c-1.2-1.8-3.4-2.3-4.7-2.2-.2 1.3.4 3.5 2.1 4.7 1.3.9 2.7.5 3.4.1.1-1.2-.3-2.2-.8-2.6z" fill="#C6AA76"/>
+          <path d="M12 14c1.2-1.8 3.4-2.3 4.7-2.2.2 1.3-.4 3.5-2.1 4.7-1.3.9-2.7.5-3.4.1-.1-1.2.3-2.2.8-2.6z" fill="#D8C193"/>
+        </svg>
+        Sellout Log
+      </div>
+      <div class="subtitle">Lazy Acres #1827 &middot; Dinner Set</div>
+    </div>
+    <button class="nav-btn danger" onclick="clearDay()">Clear</button>
+  </div>
+  <div class="date-row">
+    <input type="date" class="date-pick" id="datePick" onchange="onDateChange()">
+    <button class="nav-btn" onclick="jumpToday()">Today</button>
+  </div>
+</div>
+
+<div class="hint">
+  Tap when each item <b>ran out</b> — or "Lasted" if it made it to close. Add <b>spoils</b> (units tossed) on the right. <b>▲ items</b> are the lifted sellout suspects — those are the ones to watch most.
+</div>
+
+<div class="content" id="content"></div>
+
+<div class="footer-bar">
+  <div class="summary-stat" id="summary">Tap items as they sell out</div>
+  <button class="export-btn" onclick="openExport()">Export</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Cycle Summary</div>
+      <button class="nav-btn" onclick="closeModal()" style="font-size:20px;">&times;</button>
+    </div>
+    <div class="modal-body"><pre id="exportText"></pre></div>
+    <div class="modal-foot">
+      <button class="btn-copy" onclick="copyExport()">Copy</button>
+      <button class="btn-close" onclick="closeModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATIONS = {"Entrees":["Rosemary Chicken","Herb Salmon","Chicken Artichoke Patties","Asian Meatballs","Salmon Cake","Chicken Pot Pie","Turkey Spinach Meatballs","Flat Iron","Shredded Brisket","Poached Salmon","Blackened Chicken","Blackened Salmon","Spring Lake Tri Tip","Veggie Pot Pie","First Light Tri Tip","Turkey Lasagna","Coconut Chicken Strips","Chicken W Pineapple Salsa","Salmon W Pineapple Salsa","Kale Mushroom Lasagna"],"Sides":["Sauteed Veggies","Roasted Brussels","Roasted Beets","Herb Roasted Potatos","Tumeric Roasted Veggies","Glazed Rainbow Carrots","Roasted Broccolini","Mashed Potato","Grilled Asparagus","Mac N Cheese","Garlic Parmesean Cauliflower","Balsamic Roasted Beets","Turmeric Cauliflower","Balsamic Baby Mushrooms"]};
+const SELLOUT_ITEMS = new Set(["Rosemary Chicken","Herb Salmon","Sauteed Veggies","Roasted Brussels","Roasted Beets","Herb Roasted Potatos","Chicken Artichoke Patties"]);
+const STATION_ICONS = {"Entrees":"\uD83C\uDF56","Sides":"\uD83E\uDD57"};
+
+// Sellout-time buckets — map to a demand-capture fraction for the refresh math.
+// "Sold out at 4pm" ~= captured 60% of the day -> true demand = recorded / 0.60
+const TIME_OPTS = [
+  {v:"early",  label:"By ~2p", cap:0.40},
+  {v:"mid",    label:"By ~4p", cap:0.60},
+  {v:"late",   label:"By ~6p", cap:0.82},
+  {v:"lasted", label:"Lasted", cap:1.00},
+];
+const CAP = Object.fromEntries(TIME_OPTS.map(o=>[o.v,o.cap]));
+
+const SS_PREFIX = 'dinner_sellout_v1_';
+let currentDate = null;
+let data = {}; // { item: {time:"mid", spoil:3} }
+
+function safeId(s){ return s.replace(/[^a-zA-Z0-9]/g,'_'); }
+function fmtDate(d){ return d.toISOString().slice(0,10); }
+
+function load(date){
+  data = {};
+  try {
+    const raw = localStorage.getItem(SS_PREFIX + date);
+    if (raw) data = JSON.parse(raw);
+  } catch(e){}
+}
+function save(){
+  try { localStorage.setItem(SS_PREFIX + currentDate, JSON.stringify(data)); } catch(e){}
+}
+
+function render(){
+  const c = document.getElementById('content');
+  c.innerHTML = '';
+  for (const station of Object.keys(STATIONS)){
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.innerHTML = `<div class="section-label"><span>${STATION_ICONS[station]}</span>${station}</div>`;
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    // priority (sellout suspects) first within each section
+    const items = [...STATIONS[station]].sort((a,b)=>(SELLOUT_ITEMS.has(b)?1:0)-(SELLOUT_ITEMS.has(a)?1:0));
+    for (const item of items){
+      const sid = safeId(item);
+      const rec = data[item] || {};
+      const pri = SELLOUT_ITEMS.has(item);
+      const row = document.createElement('div');
+      row.className = 'row' + (pri ? ' priority' : '');
+      const chips = TIME_OPTS.map(o =>
+        `<button class="chip${rec.time===o.v?' sel':''}" data-v="${o.v}" onclick="setTime('${item.replace(/'/g,"\\'")}','${o.v}')">${o.label}</button>`
+      ).join('');
+      row.innerHTML = `
+        <div class="row-head">
+          <div class="item-name">${item}${pri?'<span class="pri">\u25B2</span>':''}</div>
+          <div class="spoil-wrap">
+            <span class="spoil-label">spoils</span>
+            <input class="spoil-input${rec.spoil?' has':''}" id="sp-${sid}" type="number" inputmode="numeric"
+              pattern="[0-9]*" placeholder="0" value="${rec.spoil!==undefined?rec.spoil:''}"
+              onfocus="this.select()" oninput="setSpoil('${item.replace(/'/g,"\\'")}',this.value)">
+          </div>
+        </div>
+        <div class="time-chips">${chips}</div>`;
+      card.appendChild(row);
+    }
+    sec.appendChild(card);
+    c.appendChild(sec);
+  }
+  updateSummary();
+}
+
+function setTime(item, v){
+  data[item] = data[item] || {};
+  // tap again to clear
+  if (data[item].time === v) delete data[item].time;
+  else data[item].time = v;
+  if (!data[item].time && data[item].spoil === undefined) delete data[item];
+  save(); render();
+}
+function setSpoil(item, val){
+  data[item] = data[item] || {};
+  const n = parseInt(val);
+  if (val==='' || isNaN(n)) delete data[item].spoil;
+  else data[item].spoil = n;
+  if (data[item].time===undefined && data[item].spoil===undefined) delete data[item];
+  save();
+  const el = document.getElementById('sp-'+safeId(item));
+  if (el) el.classList.toggle('has', data[item] && data[item].spoil!==undefined);
+  updateSummary();
+}
+
+function updateSummary(){
+  let soldOut=0, spoiled=0, priLogged=0;
+  for (const item in data){
+    const r = data[item];
+    if (r.time && r.time!=='lasted') soldOut++;
+    if (r.spoil) spoiled += r.spoil;
+    if (r.time && SELLOUT_ITEMS.has(item)) priLogged++;
+  }
+  const el = document.getElementById('summary');
+  el.innerHTML = `<b>${soldOut}</b> sold out &middot; <b>${spoiled}</b> spoiled &middot; <b>${priLogged}/${SELLOUT_ITEMS.size}</b> ▲ logged`;
+}
+
+function onDateChange(){
+  currentDate = document.getElementById('datePick').value;
+  load(currentDate); render();
+}
+function jumpToday(){
+  currentDate = fmtDate(new Date());
+  document.getElementById('datePick').value = currentDate;
+  load(currentDate); render();
+}
+function clearDay(){
+  if (!confirm('Clear all entries for this day?')) return;
+  data = {}; try { localStorage.removeItem(SS_PREFIX+currentDate); } catch(e){}
+  render(); toast('Cleared');
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+// Build a paste-ready summary with the demand back-calc for sellout items
+function openExport(){
+  const lines = [];
+  lines.push(`DINNER SELLOUT LOG — ${currentDate}`);
+  lines.push('='.repeat(34));
+  const sellLogged = [];
+  for (const station of Object.keys(STATIONS)){
+    const rows = [];
+    for (const item of STATIONS[station]){
+      const r = data[item];
+      if (!r || (r.time===undefined && r.spoil===undefined)) continue;
+      const t = r.time ? (TIME_OPTS.find(o=>o.v===r.time).label) : '—';
+      const sp = r.spoil ? `${r.spoil} spoiled` : '';
+      const star = SELLOUT_ITEMS.has(item) ? '▲ ' : '';
+      rows.push(`  ${star}${item}: ${t}${sp?' · '+sp:''}`);
+      if (SELLOUT_ITEMS.has(item) && r.time && r.time!=='lasted'){
+        sellLogged.push({item, cap:CAP[r.time], spoil:r.spoil||0});
+      }
+    }
+    if (rows.length){ lines.push('', station.toUpperCase()); lines.push(...rows); }
+  }
+  // Demand inference block for the flagged sellout items
+  if (sellLogged.length){
+    lines.push('', 'DEMAND SIGNAL (▲ items)', '-'.repeat(34));
+    lines.push('true demand ≈ par ÷ capture-fraction');
+    for (const s of sellLogged){
+      const pct = Math.round(s.cap*100);
+      const mult = (1/s.cap).toFixed(2);
+      const note = s.spoil>0 ? '  ⚠ spoiled too — at/over ceiling' : '';
+      lines.push(`  ${s.item}: sold out (~${pct}% capture) → lift ×${mult}${note}`);
+    }
+    lines.push('', 'Rule: sold out + 0 spoils → lift again.');
+    lines.push('Sold out + spoils → at ceiling, hold.');
+    lines.push('Lasted + spoils → over par, trim.');
+  }
+  if (lines.length<=2) lines.push('', '(no entries yet)');
+  document.getElementById('exportText').textContent = lines.join('\n');
+  document.getElementById('modalBg').classList.add('show');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('show'); }
+function copyExport(){
+  const txt = document.getElementById('exportText').textContent;
+  navigator.clipboard?.writeText(txt).then(()=>{ toast('Copied to clipboard'); closeModal(); })
+    .catch(()=>{ toast('Copy failed — select manually'); });
+}
+
+// init
+jumpToday();
+</script>
+</body>
+</html>
